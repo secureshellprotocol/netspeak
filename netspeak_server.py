@@ -1,4 +1,11 @@
 import asyncio
+import pyttsx3
+
+engine=pyttsx3.init()
+
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
 
 async def handle_client(reader, writer):
     """Callback function for every new connection."""
@@ -6,15 +13,16 @@ async def handle_client(reader, writer):
     print(f"Connected by {addr}")
 
     while True:
-        # 1. Wait for data (non-blocking)
         data = await reader.read(1024)
         if not data:
             break
 
         message = data.decode()
-        print(f"Received {message!r} from {addr}")
+        print(f"Speaking {message!r} from {addr}...", end='')
 
-        # 2. Echo the data back
+        await asyncio.to_thread(speak, message)
+
+        print(f'done')
         writer.write(data)
         await writer.drain()  # Ensure the data is sent
 
@@ -23,7 +31,6 @@ async def handle_client(reader, writer):
     await writer.wait_closed()
 
 async def main():
-    # 3. Create and start the server event loop
     IP='10.69.0.2'
     PORT=42069
     server = await asyncio.start_server(handle_client, IP, PORT)
@@ -34,6 +41,5 @@ async def main():
     async with server:
         await server.serve_forever()
 
-# 4. Run the top-level entry point
 if __name__ == "__main__":
     asyncio.run(main())

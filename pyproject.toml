@@ -6,4 +6,5 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "asyncio>=4.0.0",
+    "pyttsx3>=2.99",
 ]
