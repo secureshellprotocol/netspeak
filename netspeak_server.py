@@ -1,5 +1,7 @@
 import asyncio
 import pyttsx3
+import queue
+import threading
 
 import netspeak_config as config
 
@@ -13,11 +15,20 @@ class TTSEngine:
         self.engine.say(text)
         self.engine.runAndWait()
 
+say_queue = queue.Queue()
+
+def worker():
+    tts = TTSEngine()
+    while True:
+        phrase = say_queue.get()
+        tts.start(phrase)
+        say_queue.task_done()
+
+threading.Thread(target=worker, daemon=True).start()
+
 async def handle_client(reader, writer):
     addr = writer.get_extra_info('peername')
     print(f"Connected by {addr}")
-
-    tts = TTSEngine()
 
     while True:
         data = await reader.read(1024)
@@ -27,14 +38,13 @@ async def handle_client(reader, writer):
         message = data.decode()
         print(f"Speaking {message!r} from {addr}...", end='', flush=True)
 
-        await asyncio.to_thread(tts.start, message)
+        say_queue.put(message)
 
         print(f'done')
         writer.write(data)
         await writer.drain()  # Ensure the data is sent
 
     print(f"Closing connection with {addr}")
-    del(tts)
     writer.close()
     await writer.wait_closed()
 
