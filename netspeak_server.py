@@ -1,6 +1,8 @@
 import asyncio
 import pyttsx3
 
+import netspeak_config as config
+
 engine=pyttsx3.init()
 
 def speak(text):
@@ -8,7 +10,6 @@ def speak(text):
     engine.runAndWait()
 
 async def handle_client(reader, writer):
-    """Callback function for every new connection."""
     addr = writer.get_extra_info('peername')
     print(f"Connected by {addr}")
 
@@ -18,7 +19,7 @@ async def handle_client(reader, writer):
             break
 
         message = data.decode()
-        print(f"Speaking {message!r} from {addr}...", end='')
+        print(f"Speaking {message!r} from {addr}...", end='', flush=True)
 
         await asyncio.to_thread(speak, message)
 
@@ -31,9 +32,7 @@ async def handle_client(reader, writer):
     await writer.wait_closed()
 
 async def main():
-    IP='10.69.0.2'
-    PORT=42069
-    server = await asyncio.start_server(handle_client, IP, PORT)
+    server = await asyncio.start_server(handle_client, config.IP, config.PORT)
 
     addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)
     print(f'Serving on {addrs}')
@@ -42,4 +41,7 @@ async def main():
         await server.serve_forever()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass
