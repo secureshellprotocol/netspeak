@@ -1,6 +1,6 @@
 # Netspeak
 
-TTS over TCP/IP, using python's asyncio library
+Text to Speech over TCP/IP
 
 ## Usage
 
